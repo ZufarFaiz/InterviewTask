@@ -7,8 +7,10 @@
 
 ### 1. Клонирование репозитория
 git clone https://github.com/ZufarFaiz/InterviewTask.git
+
+### 2. Переход в папку с проектом
 cd - Название репозитория
 
-### 2. Запуск приложения
+### 3. Запуск приложения
 mvn clean compile exec:java -Dexec.args="/полный/путь/к/вашему/tickets.json"
 
