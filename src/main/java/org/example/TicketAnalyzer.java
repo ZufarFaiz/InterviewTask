@@ -5,6 +5,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import java.io.FileReader;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -24,6 +28,16 @@ public class TicketAnalyzer {
             if (vvoTlvTickets.isEmpty()) {
                 System.out.println("Не найдено билетов между Владивостоком и Тель-Авивом");
                 return;
+            }
+
+            for (JSONObject ticket : vvoTlvTickets) {
+                int duration = calculateDuration(
+                        ticket.getString("departure_date"),
+                        ticket.getString("departure_time"),
+                        ticket.getString("arrival_date"),
+                        ticket.getString("arrival_time")
+                );
+                ticket.put("duration", duration);
             }
 
             Map<String, Integer> minFlightTimes = calculateMinFlightTimes(vvoTlvTickets);
@@ -61,6 +75,31 @@ public class TicketAnalyzer {
                         t.getString("destination").equals(destination))
                 .collect(Collectors.toList());
     }
+// Вычисление времени полета
+private static int calculateDuration(String departureDate, String departureTime,
+                                     String arrivalDate, String arrivalTime) {
+    try {
+        String[] depParts = departureTime.split(":");
+        String[] arrParts = arrivalTime.split(":");
+
+        int depHour = Integer.parseInt(depParts[0]);
+        int depMinute = Integer.parseInt(depParts[1]);
+        int arrHour = Integer.parseInt(arrParts[0]);
+        int arrMinute = Integer.parseInt(arrParts[1]);
+
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yy");
+        LocalDateTime departure = LocalDate.parse(departureDate, dateFormatter)
+                .atTime(depHour, depMinute);
+        LocalDateTime arrival = LocalDate.parse(arrivalDate, dateFormatter)
+                .atTime(arrHour, arrMinute);
+
+        return (int) Duration.between(departure, arrival).toMinutes();
+
+    } catch (Exception e) {
+        System.out.println("Ошибка парсинга времени: " + e.getMessage());
+        return 0;
+    }
+}
 
     // Расчет минимального времени полета для каждого перевозчика
     private static Map<String, Integer> calculateMinFlightTimes(List<JSONObject> tickets) {
